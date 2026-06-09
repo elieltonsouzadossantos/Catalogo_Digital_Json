@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo Digital — Modelo JSON</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --cor-primaria: #E63946;
+    --cor-escura:   #1D3557;
+    --cor-clara:    #F1FAEE;
+    --cor-accent:   #457B9D;
+    --amarelo:      #FFB703;
+    --branco:       #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cor-clara);
+    font-family: 'Nunito', sans-serif;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--cor-escura);
+    color: white;
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.8rem, 6vw, 3rem);
+    letter-spacing: 3px;
+    color: var(--amarelo);
+    margin-bottom: 0.8rem;
+  }
+
+  /* ── BARRA DE BUSCA E FILTROS ── */
+  .controles {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .busca-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 340px;
+  }
+
+  .busca-wrap i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+  }
+
+  #busca {
+    width: 100%;
+    padding: 0.55rem 0.8rem 0.55rem 2.2rem;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+  }
+
+  .filtro-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 0.45rem 1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .filtro-btn:hover, .filtro-btn.ativo {
+    background: var(--amarelo);
+    color: var(--cor-escura);
+    border-color: var(--amarelo);
+  }
+
+  /* ── CONTADOR ── */
+  .contador {
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: var(--cor-accent);
+    font-weight: 700;
+  }
+
+  /* ── GRID ── */
+  .grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.2rem;
+    padding: 0.5rem 1.2rem 3rem;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 480px) {
+    .grade { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; padding: 0.5rem 0.6rem 3rem; }
+  }
+
+  /* ── CARD ── */
+  .card-produto {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.08);
+    transition: transform 0.22s, box-shadow 0.22s;
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-produto:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+  }
+
+  /* ── BADGE ── */
+  .card-badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+  }
+
+  .badge-novo      { background: #2ECC71; color: white; }
+  .badge-oferta    { background: var(--cor-primaria); color: white; }
+  .badge-destaque  { background: var(--amarelo); color: #333; }
+
+  /* ── IMAGEM ── */
+  .card-img-wrap {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+    cursor: zoom-in;
+    background: #eee;
+  }
+
+  @media (max-width: 480px) {
+    .card-img-wrap { height: 120px; }
+  }
+
+  .card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .card-img-wrap:hover img { transform: scale(1.08); }
+
+  .card-img-wrap::after {
+    content: "\F52A";
+    font-family: "bootstrap-icons";
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  .card-img-wrap:hover::after { opacity: 1; }
+
+  /* ── CORPO ── */
+  .card-corpo {
+    padding: 0.8rem 0.85rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+  }
+
+  .card-categoria {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cor-accent);
+  }
+
+  .card-nome {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--cor-escura);
+    line-height: 1.1;
+  }
+
+  .card-desc {
+    font-size: 0.75rem;
+    color: #777;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-rodape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .card-preco {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--cor-primaria);
+  }
+
+  .card-preco small {
+    font-size: 0.65rem;
+    color: #aaa;
+    font-weight: 600;
+    display: block;
+    line-height: 1;
+  }
+
+  .btn-wpp {
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 0.38rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-wpp:hover { background: #1ebe5d; color: white; transform: scale(1.05); }
+
+  /* ── VAZIO ── */
+  .vazio {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #aaa;
+  }
+
+  .vazio i { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+  /* ── MODAL ZOOM ── */
+  #zoomOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    cursor: zoom-out;
+  }
+
+  #zoomOverlay.ativo { display: flex; animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  #zoomImagem {
+    max-width: 92vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 3px solid white;
+    animation: zoomIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    cursor: default;
+  }
+
+  @keyframes zoomIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  #zoomFechar {
+    position: fixed;
+    top: 14px; right: 16px;
+    background: white;
+    border: none;
+    color: #333;
+    font-size: 1.2rem;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    transition: transform 0.2s;
+    z-index: 2001;
+  }
+
+  #zoomFechar:hover { transform: rotate(90deg); }
+
+  #zoomLegenda {
+    position: fixed;
+    bottom: 18px; left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: #333;
+    padding: 5px 20px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    z-index: 2001;
+    pointer-events: none;
+  }
+
+  /* ── BOTÃO ADICIONAR (substitui btn-wpp nos cards) ── */
+  .btn-adicionar {
+    background: var(--cor-escura);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 0.38rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-adicionar:hover  { background: #2d4a7a; transform: scale(1.05); }
+  .btn-adicionar.adicionado { background: #25D366; }
+  .btn-adicionar.adicionado:hover { background: #1ebe5d; }
+
+  /* ── CARRINHO FAB (botão flutuante do carrinho) ── */
+  #carrinho-fab {
+    position: fixed;
+    bottom: 90px; right: 20px;
+    width: 58px; height: 58px;
+    background: var(--cor-primaria);
+    color: white;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 4px 20px rgba(230,57,70,0.5);
+    transition: transform 0.2s;
+    border: none;
+  }
+
+  #carrinho-fab:hover { transform: scale(1.1); }
+
+  #carrinho-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: var(--amarelo);
+    color: var(--cor-escura);
+    font-size: 0.7rem;
+    font-weight: 900;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── MODAL DO CARRINHO ── */
+  #carrinho-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+
+  @media (min-width: 600px) {
+    #carrinho-overlay { align-items: center; padding: 1rem; }
+  }
+
+  #carrinho-overlay.ativo { display: flex; animation: fadeIn 0.2s ease; }
+
+  .carrinho-modal {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 24px 24px 0 0;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    overflow: hidden;
+  }
+
+  @media (min-width: 600px) {
+    .carrinho-modal {
+      border-radius: 24px;
+      transform: scale(0.85);
+    }
+    #carrinho-overlay.ativo .carrinho-modal { transform: scale(1); }
+  }
+
+  #carrinho-overlay.ativo .carrinho-modal { transform: translateY(0); }
+
+  .carrinho-header {
+    padding: 1.2rem 1.4rem 1rem;
+    border-bottom: 1.5px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .carrinho-header h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    color: var(--cor-escura);
+  }
+
+  .carrinho-fechar {
+    background: #f0f0f0;
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 900;
+    transition: transform 0.2s;
+  }
+
+  .carrinho-fechar:hover { transform: rotate(90deg); }
+
+  .carrinho-lista {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.5rem 1.4rem;
+  }
+
+  .carrinho-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f5f5f5;
+    gap: 0.5rem;
+  }
+
+  .carrinho-item-nome {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--cor-escura);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .carrinho-item-acoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .carrinho-item-preco {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--cor-primaria);
+  }
+
+  .carrinho-remover {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    padding: 4px;
+  }
+
+  .carrinho-remover:hover { color: var(--cor-primaria); }
+
+  .carrinho-vazio {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #aaa;
+  }
+
+  .carrinho-vazio i { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+  .carrinho-footer {
+    padding: 1rem 1.4rem 1.4rem;
+    border-top: 1.5px solid #f0f0f0;
+    flex-shrink: 0;
+  }
+
+  #carrinho-total {
+    font-size: 1rem;
+    color: var(--cor-escura);
+    margin-bottom: 0.8rem;
+    text-align: right;
+  }
+
+  .carrinho-acoes {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .btn-limpar {
+    background: #f0f0f0;
+    color: #666;
+    border: none;
+    border-radius: 50px;
+    padding: 0.7rem 1.2rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-limpar:hover { background: #e0e0e0; }
+
+  .campo-nome-wrap {
+    position: relative;
+    margin-bottom: 0.8rem;
+  }
+
+  .campo-nome-wrap i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 1rem;
+  }
+
+  #campo-nome {
+    width: 100%;
+    padding: 0.65rem 0.8rem 0.65rem 2.2rem;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--cor-escura);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #campo-nome:focus {
+    border-color: var(--cor-accent);
+  }
+
+  #campo-nome::placeholder {
+    color: #bbb;
+    font-weight: 600;
+  }
+
+  .btn-enviar {
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 0.7rem 1.4rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 14px rgba(37,211,102,0.4);
+  }
+
+  .btn-enviar:hover { background: #1ebe5d; transform: translateY(-2px); }
+
+  /* ── PAGINAÇÃO ── */
+  #paginacao { padding: 1rem 1.2rem 0.5rem; }
+
+  .pag-wrap {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .pag-btn {
+    background: white;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    width: 38px; height: 38px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-escura);
+  }
+
+  .pag-btn:hover:not(:disabled) { background: var(--cor-escura); color: white; border-color: var(--cor-escura); }
+  .pag-btn.ativo { background: var(--cor-primaria); color: white; border-color: var(--cor-primaria); }
+  .pag-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pag-reticencias { color: #aaa; font-weight: 700; padding: 0 4px; }
+  .wpp-float {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    width: 58px; height: 58px;
+    background: #25D366;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem;
+    text-decoration: none;
+    z-index: 999;
+    box-shadow: 0 4px 20px rgba(37,211,102,0.5);
+    transition: transform 0.2s;
+  }
+
+  .wpp-float:hover { transform: scale(1.1); color: white; }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--cor-escura);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.82rem;
+  }
+
+  footer strong { color: var(--amarelo); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <h1>🛍️ Catálogo Digital — Modelo JSON</h1>
+  <div class="controles">
+    <div class="busca-wrap">
+      <i class="bi bi-search"></i>
+      <input type="text" id="busca" placeholder="Buscar produto...">
+    </div>
+    <button class="filtro-btn ativo" onclick="filtrar('todos', this)">Todos</button>
+    <button class="filtro-btn" onclick="filtrar('Camisetas', this)">👕 Camisetas</button>
+    <button class="filtro-btn" onclick="filtrar('Calças', this)">👖 Calças</button>
+    <button class="filtro-btn" onclick="filtrar('Vestidos', this)">👗 Vestidos</button>
+    <button class="filtro-btn" onclick="filtrar('Acessórios', this)">👜 Acessórios</button>
+  </div>
+</header>
+
+<!-- CONTADOR -->
+<div class="contador" id="contador">Carregando produtos...</div>
+
+<!-- GRADE -->
+<div class="grade" id="grade"></div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>🛍️ Catálogo Digital</strong> · Atendimento via WhatsApp · (73) 99120-3415
+</footer>
+
+<!-- BOTÃO FLUTUANTE -->
+<a href="https://wa.me/5573991203415?text=Olá,%20quero%20fazer%20um%20pedido!" class="wpp-float" target="_blank">
+  <i class="bi bi-whatsapp"></i>
+</a>
+
+<!-- PAGINAÇÃO -->
+<div id="paginacao"></div>
+
+<!-- MODAL CARRINHO -->
+<div id="carrinho-overlay" onclick="fecharCarrinho(event)">
+  <div class="carrinho-modal">
+    <div class="carrinho-header">
+      <h3>🛒 Meu Pedido</h3>
+      <button class="carrinho-fechar" onclick="fecharCarrinho(true)">✕</button>
+    </div>
+    <div class="carrinho-lista" id="carrinho-lista"></div>
+    <div class="carrinho-footer">
+      <div id="carrinho-total"></div>
+      <div class="campo-nome-wrap">
+        <i class="bi bi-person"></i>
+        <input type="text" id="campo-nome" placeholder="Seu nome (opcional)" maxlength="50">
+      </div>
+      <div class="carrinho-acoes">
+        <button class="btn-limpar" onclick="limparCarrinho()">
+          <i class="bi bi-trash"></i> Limpar
+        </button>
+        <button class="btn-enviar" onclick="enviarPedido()">
+          <i class="bi bi-whatsapp"></i> Enviar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTÃO FLUTUANTE CARRINHO -->
+<button id="carrinho-fab" onclick="abrirCarrinho()">
+  <i class="bi bi-cart3"></i>
+  <span id="carrinho-badge"></span>
+</button>
+<div id="zoomOverlay" onclick="fecharZoom(event)">
+  <button id="zoomFechar" onclick="fecharZoom(true)">✕</button>
+  <img id="zoomImagem" src="" alt="">
+  <div id="zoomLegenda"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   🗂️ JSON DOS PRODUTOS
+   Para adicionar um produto novo, copie um bloco { }
+   e preencha os campos. É só isso!
+   ═══════════════════════════════════════════════════ */
+const produtos = [
+  { id:1,  nome:"Camiseta Básica Branca",    categoria:"Camisetas",   preco:"R$ 39,90", desc:"100% algodão, corte regular, lavável à máquina.", foto:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:2,  nome:"Camiseta Listrada Azul",    categoria:"Camisetas",   preco:"R$ 44,90", desc:"Listras horizontais, tecido leve e durável.",      foto:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400", badge:"",         whats:"5573991203415" },
+  { id:3,  nome:"Camiseta Preta Premium",    categoria:"Camisetas",   preco:"R$ 49,90", desc:"Corte slim, tecido premium, acabamento reforçado.", foto:"https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:4,  nome:"Camiseta Polo Cinza",       categoria:"Camisetas",   preco:"R$ 59,90", desc:"Polo clássica com botões, ideal para o dia a dia.", foto:"https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400", badge:"",         whats:"5573991203415" },
+  { id:5,  nome:"Camiseta Estampada Floral", categoria:"Camisetas",   preco:"R$ 54,90", desc:"Estampa floral exclusiva, tecido fresco e leve.",   foto:"https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:6,  nome:"Camiseta Oversized",        categoria:"Camisetas",   preco:"R$ 64,90", desc:"Corte oversized moderno, estilo streetwear.",       foto:"https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:7,  nome:"Camiseta Regata Branca",    categoria:"Camisetas",   preco:"R$ 29,90", desc:"Regata básica, ideal para academia e passeios.",    foto:"https://images.unsplash.com/photo-1622445275576-721325763afe?w=400", badge:"",         whats:"5573991203415" },
+  { id:8,  nome:"Camiseta Tie Dye",          categoria:"Camisetas",   preco:"R$ 69,90", desc:"Tie dye artesanal, cada peça é única.",             foto:"https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:9,  nome:"Camiseta Manga Longa",      categoria:"Camisetas",   preco:"R$ 74,90", desc:"Manga longa confortável, ideal para o inverno.",    foto:"https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400", badge:"",         whats:"5573991203415" },
+  { id:10, nome:"Camiseta Gola V",           categoria:"Camisetas",   preco:"R$ 42,90", desc:"Gola V elegante, tecido suave e respirável.",       foto:"https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400", badge:"oferta",   whats:"5573991203415" },
+
+  { id:11, nome:"Calça Jeans Skinny",        categoria:"Calças",      preco:"R$ 129,90",desc:"Jeans skinny de alta qualidade, muito confortável.", foto:"https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400", badge:"",         whats:"5573991203415" },
+  { id:12, nome:"Calça Social Preta",        categoria:"Calças",      preco:"R$ 149,90",desc:"Social slim fit, ideal para trabalho e eventos.",   foto:"https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:13, nome:"Calça Cargo Bege",          categoria:"Calças",      preco:"R$ 139,90",desc:"Cargo com bolsos laterais, estilo casual moderno.", foto:"https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:14, nome:"Calça Moletom Cinza",       categoria:"Calças",      preco:"R$ 89,90", desc:"Moletom macio e quentinho, perfeito para casa.",    foto:"https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400", badge:"",         whats:"5573991203415" },
+  { id:15, nome:"Calça Jeans Wide Leg",      categoria:"Calças",      preco:"R$ 159,90",desc:"Wide leg moderna, tendência da moda atual.",        foto:"https://images.unsplash.com/photo-1542272604-787c3835535d?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:16, nome:"Calça Alfaiataria",         categoria:"Calças",      preco:"R$ 179,90",desc:"Alfaiataria elegante, caimento perfeito.",           foto:"https://images.unsplash.com/photo-1594938374182-a55eb359e391?w=400", badge:"",         whats:"5573991203415" },
+  { id:17, nome:"Calça Legging Preta",       categoria:"Calças",      preco:"R$ 69,90", desc:"Legging com cós alto, ideal para academia.",        foto:"https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:18, nome:"Calça Bermuda Jeans",       categoria:"Calças",      preco:"R$ 99,90", desc:"Bermuda jeans clássica, versátil e confortável.",   foto:"https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=400", badge:"",         whats:"5573991203415" },
+  { id:19, nome:"Calça Palazzo Floral",      categoria:"Calças",      preco:"R$ 119,90",desc:"Palazzo com estampa floral, fluida e elegante.",    foto:"https://images.unsplash.com/photo-1594938374182-a55eb359e391?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:20, nome:"Calça Slim Fit Azul",       categoria:"Calças",      preco:"R$ 134,90",desc:"Slim fit jeans azul, corte moderno e ajustado.",    foto:"https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400", badge:"",         whats:"5573991203415" },
+
+  { id:21, nome:"Vestido Floral Midi",       categoria:"Vestidos",    preco:"R$ 149,90",desc:"Vestido midi floral, leve e elegante para o verão.", foto:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:22, nome:"Vestido Preto Social",      categoria:"Vestidos",    preco:"R$ 189,90",desc:"Vestido preto clássico, ideal para eventos formais.", foto:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:23, nome:"Vestido Casual Listrado",   categoria:"Vestidos",    preco:"R$ 129,90",desc:"Listras coloridas, tecido leve para o dia a dia.",  foto:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400", badge:"",         whats:"5573991203415" },
+  { id:24, nome:"Vestido Longo Boho",        categoria:"Vestidos",    preco:"R$ 219,90",desc:"Estilo boho, longo e fluido, perfeito para festas.", foto:"https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:25, nome:"Vestido Curto Vermelho",    categoria:"Vestidos",    preco:"R$ 159,90",desc:"Vermelho vibrante, corte A-line, muito elegante.",   foto:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400", badge:"",         whats:"5573991203415" },
+  { id:26, nome:"Vestido Jeans",             categoria:"Vestidos",    preco:"R$ 169,90",desc:"Jeans descolado, versátil para qualquer ocasião.",   foto:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:27, nome:"Vestido Estampado Tropical",categoria:"Vestidos",    preco:"R$ 139,90",desc:"Tropical e alegre, ideal para praia e passeios.",    foto:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400", badge:"",         whats:"5573991203415" },
+  { id:28, nome:"Vestido de Festa Dourado",  categoria:"Vestidos",    preco:"R$ 299,90",desc:"Brilho dourado sofisticado, para noites especiais.", foto:"https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:29, nome:"Vestido Envelope Rosa",     categoria:"Vestidos",    preco:"R$ 179,90",desc:"Corte envelope moderno, rosa suave e delicado.",     foto:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400", badge:"",         whats:"5573991203415" },
+  { id:30, nome:"Vestido Slip Dress",        categoria:"Vestidos",    preco:"R$ 199,90",desc:"Slip dress sedoso, minimalista e sofisticado.",      foto:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", badge:"oferta",   whats:"5573991203415" },
+
+  { id:31, nome:"Bolsa Tote Bege",           categoria:"Acessórios",  preco:"R$ 89,90", desc:"Tote bag espaçosa, ideal para o trabalho e compras.", foto:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:32, nome:"Cinto de Couro Preto",      categoria:"Acessórios",  preco:"R$ 59,90", desc:"Couro legítimo, fivela dourada, muito durável.",     foto:"https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=400", badge:"",         whats:"5573991203415" },
+  { id:33, nome:"Óculos de Sol Retrô",       categoria:"Acessórios",  preco:"R$ 79,90", desc:"Armação retrô, proteção UV400, muito estiloso.",     foto:"https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:34, nome:"Boné Preto Básico",         categoria:"Acessórios",  preco:"R$ 49,90", desc:"Boné snapback ajustável, 100% algodão.",             foto:"https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400", badge:"",         whats:"5573991203415" },
+  { id:35, nome:"Carteira Masculina",        categoria:"Acessórios",  preco:"R$ 69,90", desc:"Couro legítimo, slim, porta cartões e cédulas.",     foto:"https://images.unsplash.com/photo-1627123424574-724758594e93?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:36, nome:"Mochila Urban Preta",       categoria:"Acessórios",  preco:"R$ 149,90",desc:"Mochila resistente com porta notebook e USB.",       foto:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:37, nome:"Chapéu Panamá",             categoria:"Acessórios",  preco:"R$ 99,90", desc:"Palha trançada, proteção solar, muito estiloso.",    foto:"https://images.unsplash.com/photo-1521369909029-2afed882baee?w=400", badge:"",         whats:"5573991203415" },
+  { id:38, nome:"Pulseira Dourada",          categoria:"Acessórios",  preco:"R$ 39,90", desc:"Pulseira banhada a ouro, delicada e elegante.",      foto:"https://images.unsplash.com/photo-1573408301185-9519f94f1b48?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:39, nome:"Lenço Estampado",           categoria:"Acessórios",  preco:"R$ 34,90", desc:"Seda sintética, estampa exclusiva, multiuso.",       foto:"https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=400", badge:"",         whats:"5573991203415" },
+  { id:40, nome:"Bolsa Clutch Dourada",      categoria:"Acessórios",  preco:"R$ 119,90",desc:"Clutch metalizada, perfeita para festas e eventos.", foto:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400", badge:"oferta",   whats:"5573991203415" },
+
+  { id:41, nome:"Camiseta Xadrez Verde",     categoria:"Camisetas",   preco:"R$ 57,90", desc:"Xadrez clássico, algodão macio, corte regular.",     foto:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400", badge:"",         whats:"5573991203415" },
+  { id:42, nome:"Camiseta Dry Fit Azul",     categoria:"Camisetas",   preco:"R$ 52,90", desc:"Dry fit esportivo, ideal para treinos e corridas.",  foto:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:43, nome:"Camiseta Estampa Urbana",   categoria:"Camisetas",   preco:"R$ 67,90", desc:"Arte urbana exclusiva, 100% algodão penteado.",      foto:"https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:44, nome:"Camiseta Gola Careca",      categoria:"Camisetas",   preco:"R$ 45,90", desc:"Básica gola careca, versatilidade para qualquer look.", foto:"https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400", badge:"",       whats:"5573991203415" },
+  { id:45, nome:"Camiseta Vintage",          categoria:"Camisetas",   preco:"R$ 72,90", desc:"Efeito vintage lavado, estilo retrô autêntico.",      foto:"https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:46, nome:"Calça Jogger Preta",        categoria:"Calças",      preco:"R$ 109,90",desc:"Jogger confortável, punho na barra, moderna.",        foto:"https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:47, nome:"Calça Sarja Bege",          categoria:"Calças",      preco:"R$ 119,90",desc:"Sarja leve, versatilidade entre casual e social.",    foto:"https://images.unsplash.com/photo-1594938374182-a55eb359e391?w=400", badge:"",         whats:"5573991203415" },
+  { id:48, nome:"Calça Veludo Costado",      categoria:"Calças",      preco:"R$ 144,90",desc:"Veludo cotelê, tendência do outono/inverno.",          foto:"https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:49, nome:"Vestido Chemise Azul",      categoria:"Vestidos",    preco:"R$ 155,90",desc:"Chemise azul royal, botões frontais, muito chique.",  foto:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400", badge:"",         whats:"5573991203415" },
+  { id:50, nome:"Vestido Babado Rosa",       categoria:"Vestidos",    preco:"R$ 169,90",desc:"Babados românticos, rosa suave, leveza e charme.",    foto:"https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=400", badge:"novo",     whats:"5573991203415" },
+
+  { id:51, nome:"Camiseta Básica Cinza",     categoria:"Camisetas",   preco:"R$ 37,90", desc:"Cinza mescla clássico, algodão premium.",             foto:"https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400", badge:"",         whats:"5573991203415" },
+  { id:52, nome:"Camiseta Cavada Rosa",      categoria:"Camisetas",   preco:"R$ 41,90", desc:"Cavada feminina, rosa candy, super delicada.",        foto:"https://images.unsplash.com/photo-1622445275576-721325763afe?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:53, nome:"Camiseta Polo Azul",        categoria:"Camisetas",   preco:"R$ 62,90", desc:"Polo azul marinho, botões brancos, muito elegante.",  foto:"https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400", badge:"",         whats:"5573991203415" },
+  { id:54, nome:"Calça Flare Jeans",         categoria:"Calças",      preco:"R$ 154,90",desc:"Flare jeans na moda, cintura alta, muito estilosa.",  foto:"https://images.unsplash.com/photo-1542272604-787c3835535d?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:55, nome:"Calça Cropped Social",      categoria:"Calças",      preco:"R$ 124,90",desc:"Social cropped, tornozelo à mostra, chique e moderno.", foto:"https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=400", badge:"",       whats:"5573991203415" },
+  { id:56, nome:"Vestido Midi Xadrez",       categoria:"Vestidos",    preco:"R$ 174,90",desc:"Xadrez clássico em vestido midi, elegante e moderno.", foto:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400", badge:"novo",    whats:"5573991203415" },
+  { id:57, nome:"Vestido Renda Branco",      categoria:"Vestidos",    preco:"R$ 229,90",desc:"Renda delicada, branco puro, perfeito para noivas.",  foto:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:58, nome:"Bolsa Crossbody Caramelo",  categoria:"Acessórios",  preco:"R$ 109,90",desc:"Crossbody de couro caramelo, prática e estilosa.",    foto:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400", badge:"",         whats:"5573991203415" },
+  { id:59, nome:"Relógio Minimalista",       categoria:"Acessórios",  preco:"R$ 199,90",desc:"Mostrador simples, pulseira de couro, atemporal.",    foto:"https://images.unsplash.com/photo-1524592094714-0f0654e359b1?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:60, nome:"Brinco Argola Dourado",     categoria:"Acessórios",  preco:"R$ 29,90", desc:"Argola grande banhada a ouro, tendência da moda.",    foto:"https://images.unsplash.com/photo-1573408301185-9519f94f1b48?w=400", badge:"",         whats:"5573991203415" },
+
+  { id:61, nome:"Camiseta Tie Dye Verde",    categoria:"Camisetas",   preco:"R$ 65,90", desc:"Tie dye verde natureza, peça única e exclusiva.",     foto:"https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:62, nome:"Camiseta Manga Curta Lisa", categoria:"Camisetas",   preco:"R$ 35,90", desc:"Lisa e versátil, combinação garantida com tudo.",     foto:"https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400", badge:"",         whats:"5573991203415" },
+  { id:63, nome:"Calça Clochard Bege",       categoria:"Calças",      preco:"R$ 137,90",desc:"Clochard plissada, cintura alta, muito fashion.",      foto:"https://images.unsplash.com/photo-1594938374182-a55eb359e391?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:64, nome:"Calça Bermuda Sarja",       categoria:"Calças",      preco:"R$ 94,90", desc:"Bermuda sarja bege, casual e confortável.",            foto:"https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=400", badge:"",         whats:"5573991203415" },
+  { id:65, nome:"Vestido Wrap Verde",        categoria:"Vestidos",    preco:"R$ 162,90",desc:"Wrap dress verde esmeralda, transpassado e elegante.", foto:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:66, nome:"Vestido Plissado Nude",     categoria:"Vestidos",    preco:"R$ 184,90",desc:"Plissado delicado, tom nude, sofisticado e chique.",   foto:"https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=400", badge:"",         whats:"5573991203415" },
+  { id:67, nome:"Mochila Mini Rosa",         categoria:"Acessórios",  preco:"R$ 79,90", desc:"Mini mochila tendência, rosa millennial, muito cute.", foto:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:68, nome:"Colar Delicado Prata",      categoria:"Acessórios",  preco:"R$ 44,90", desc:"Prata 925, pingente delicado, para uso diário.",      foto:"https://images.unsplash.com/photo-1573408301185-9519f94f1b48?w=400", badge:"",         whats:"5573991203415" },
+  { id:69, nome:"Óculos Gatinho Nude",       categoria:"Acessórios",  preco:"R$ 84,90", desc:"Armação gatinho, tom nude, feminino e estiloso.",     foto:"https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:70, nome:"Cinto Trançado Marrom",     categoria:"Acessórios",  preco:"R$ 54,90", desc:"Trançado à mão, couro legítimo, durável e bonito.",   foto:"https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=400", badge:"",         whats:"5573991203415" },
+
+  { id:71, nome:"Camiseta Neon Verde",       categoria:"Camisetas",   preco:"R$ 48,90", desc:"Verde neon vibrante, algodão, destaque no visual.",   foto:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:72, nome:"Camiseta Universitária",    categoria:"Camisetas",   preco:"R$ 55,90", desc:"Estilo universitário americano, lettering bold.",      foto:"https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400", badge:"",         whats:"5573991203415" },
+  { id:73, nome:"Calça Saruel Preta",        categoria:"Calças",      preco:"R$ 112,90",desc:"Saruel moderna, caimento solto e muito confortável.",  foto:"https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:74, nome:"Calça Jeans Destroyed",     categoria:"Calças",      preco:"R$ 164,90",desc:"Destroyed na moda, rasgos estratégicos, muito cool.",  foto:"https://images.unsplash.com/photo-1542272604-787c3835535d?w=400", badge:"",         whats:"5573991203415" },
+  { id:75, nome:"Vestido Decotado Preto",    categoria:"Vestidos",    preco:"R$ 194,90",desc:"Decote elegante, preto poderoso, para noites especiais.", foto:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:76, nome:"Vestido Off White Linho",   categoria:"Vestidos",    preco:"R$ 209,90",desc:"Linho off white, leveza e sofisticação no verão.",     foto:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", badge:"",         whats:"5573991203415" },
+  { id:77, nome:"Bolsa Bucket Verde",        categoria:"Acessórios",  preco:"R$ 94,90", desc:"Bucket bag verde, tendência atual, espaçosa.",         foto:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:78, nome:"Chapéu Bucket Rosa",        categoria:"Acessórios",  preco:"R$ 59,90", desc:"Bucket hat rosa, proteção solar com muito estilo.",    foto:"https://images.unsplash.com/photo-1521369909029-2afed882baee?w=400", badge:"",         whats:"5573991203415" },
+  { id:79, nome:"Pulseira de Couro Preta",   categoria:"Acessórios",  preco:"R$ 34,90", desc:"Couro legítimo, fecho magnético, unissex e moderno.",  foto:"https://images.unsplash.com/photo-1573408301185-9519f94f1b48?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:80, nome:"Carteira Feminina Rosa",    categoria:"Acessórios",  preco:"R$ 74,90", desc:"Rosa suave, porta cartões e espelho interno.",         foto:"https://images.unsplash.com/photo-1627123424574-724758594e93?w=400", badge:"",         whats:"5573991203415" },
+
+  { id:81, nome:"Camiseta Estampa Animal",   categoria:"Camisetas",   preco:"R$ 58,90", desc:"Estampa animal print, arrojada e muito fashion.",      foto:"https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:82, nome:"Camiseta Minimalista",      categoria:"Camisetas",   preco:"R$ 46,90", desc:"Design minimalista, logo bordado, muito elegante.",    foto:"https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400", badge:"",         whats:"5573991203415" },
+  { id:83, nome:"Calça Pantalona Branca",    categoria:"Calças",      preco:"R$ 147,90",desc:"Pantalona branca, flui com leveza, muito chique.",      foto:"https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:84, nome:"Calça Jeans Mom",           categoria:"Calças",      preco:"R$ 169,90",desc:"Mom jeans cintura alta, clássica e muito versátil.",   foto:"https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:85, nome:"Vestido Ciganinha",         categoria:"Vestidos",    preco:"R$ 139,90",desc:"Ombro a ombro, babados, romântica e feminina.",         foto:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400", badge:"",         whats:"5573991203415" },
+  { id:86, nome:"Vestido Evasê Florido",     categoria:"Vestidos",    preco:"R$ 154,90",desc:"Evasê com flores delicadas, leveza e delicadeza.",      foto:"https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:87, nome:"Necessaire de Couro",       categoria:"Acessórios",  preco:"R$ 64,90", desc:"Couro ecológico, compartimento duplo, super prática.", foto:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400", badge:"",         whats:"5573991203415" },
+  { id:88, nome:"Anel Ajustável Dourado",    categoria:"Acessórios",  preco:"R$ 24,90", desc:"Ajustável, banhado a ouro, delicado e moderno.",       foto:"https://images.unsplash.com/photo-1573408301185-9519f94f1b48?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:89, nome:"Boné Polo Branco",          categoria:"Acessórios",  preco:"R$ 54,90", desc:"Polo branco clássico, bordado delicado, atemporal.",   foto:"https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400", badge:"",         whats:"5573991203415" },
+  { id:90, nome:"Mochila Executiva Preta",   categoria:"Acessórios",  preco:"R$ 189,90",desc:"Executiva com porta notebook 15', USB e antifurto.",   foto:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400", badge:"novo",     whats:"5573991203415" },
+
+  { id:91, nome:"Camiseta Cropped Branca",   categoria:"Camisetas",   preco:"R$ 38,90", desc:"Cropped básica branca, combina com tudo.",             foto:"https://images.unsplash.com/photo-1622445275576-721325763afe?w=400", badge:"",         whats:"5573991203415" },
+  { id:92, nome:"Camiseta Manga 3/4",        categoria:"Camisetas",   preco:"R$ 53,90", desc:"Manga 3/4 elegante, perfeita para o outono.",          foto:"https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:93, nome:"Calça Jeans Boyfriend",     categoria:"Calças",      preco:"R$ 172,90",desc:"Boyfriend jeans, caimento solto e muito estiloso.",    foto:"https://images.unsplash.com/photo-1542272604-787c3835535d?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:94, nome:"Calça Couro Fake",          categoria:"Calças",      preco:"R$ 189,90",desc:"Efeito couro, tendência, muito sofisticada.",           foto:"https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=400", badge:"",         whats:"5573991203415" },
+  { id:95, nome:"Vestido Assimétrico",       categoria:"Vestidos",    preco:"R$ 212,90",desc:"Barra assimétrica, moderno e arrojado, estilo único.", foto:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400", badge:"novo",     whats:"5573991203415" },
+  { id:96, nome:"Vestido Tule Rosa",         categoria:"Vestidos",    preco:"R$ 249,90",desc:"Tule delicado, rosa sonho, perfeito para festas.",     foto:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", badge:"destaque", whats:"5573991203415" },
+  { id:97, nome:"Óculos Quadrado Preto",     categoria:"Acessórios",  preco:"R$ 89,90", desc:"Armação quadrada preta, clássico e atemporal.",        foto:"https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400", badge:"",         whats:"5573991203415" },
+  { id:98, nome:"Bolsa Transparente",        categoria:"Acessórios",  preco:"R$ 99,90", desc:"Transparente moderna, tendência das passarelas.",      foto:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400", badge:"oferta",   whats:"5573991203415" },
+  { id:99, nome:"Scrunchie de Cetim",        categoria:"Acessórios",  preco:"R$ 19,90", desc:"Cetim macio, não marca o cabelo, delicado.",           foto:"https://images.unsplash.com/photo-1573408301185-9519f94f1b48?w=400", badge:"",         whats:"5573991203415" },
+  { id:100,nome:"Kit 3 Meias Estampadas",    categoria:"Acessórios",  preco:"R$ 34,90", desc:"3 pares com estampas divertidas, 100% algodão.",       foto:"https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=400", badge:"novo",     whats:"5573991203415" },
+];
+
+/* ═══════════════════════════════════════════════════
+   ⚙️ JAVASCRIPT — NÃO PRECISA MEXER AQUI
+   ═══════════════════════════════════════════════════ */
+
+// ── ESTADO GERAL ──
+let categoriaAtual = 'todos';
+let buscaAtual     = '';
+let paginaAtual    = 1;
+const POR_PAGINA   = 20;
+let listaFiltrada  = [];
+
+// ── CARRINHO ──
+let carrinho = []; // [ { id, nome, preco, whats } ]
+
+/* ─── CARRINHO: ADICIONAR / REMOVER ─── */
+function toggleCarrinho(id) {
+  const produto = produtos.find(p => p.id === id);
+  const idx     = carrinho.findIndex(c => c.id === id);
+
+  if (idx === -1) {
+    carrinho.push({ id: produto.id, nome: produto.nome, preco: produto.preco, whats: produto.whats });
+  } else {
+    carrinho.splice(idx, 1);
+  }
+
+  atualizarBotaoCard(id);
+  atualizarBadgeCarrinho();
+}
+
+function noCarrinho(id) {
+  return carrinho.some(c => c.id === id);
+}
+
+function atualizarBotaoCard(id) {
+  const btn = document.querySelector(`[data-id="${id}"]`);
+  if (!btn) return;
+  if (noCarrinho(id)) {
+    btn.innerHTML = `<i class="bi bi-check-lg"></i> Adicionado`;
+    btn.classList.add('adicionado');
+  } else {
+    btn.innerHTML = `<i class="bi bi-cart-plus"></i> Adicionar`;
+    btn.classList.remove('adicionado');
+  }
+}
+
+function atualizarBadgeCarrinho() {
+  const badge = document.getElementById('carrinho-badge');
+  badge.textContent = carrinho.length;
+  badge.style.display = carrinho.length > 0 ? 'flex' : 'none';
+
+  const fab = document.getElementById('carrinho-fab');
+  fab.style.display = carrinho.length > 0 ? 'flex' : 'none';
+}
+
+/* ─── CARRINHO: MODAL ─── */
+function abrirCarrinho() {
+  const lista  = document.getElementById('carrinho-lista');
+  const total  = document.getElementById('carrinho-total');
+  const overlay = document.getElementById('carrinho-overlay');
+
+  if (carrinho.length === 0) {
+    lista.innerHTML = `<div class="carrinho-vazio"><i class="bi bi-cart-x"></i><p>Nenhum produto adicionado ainda.</p></div>`;
+    total.textContent = '';
+  } else {
+    lista.innerHTML = carrinho.map(c => `
+      <div class="carrinho-item">
+        <div class="carrinho-item-nome">
+          <i class="bi bi-check-circle-fill" style="color:#25D366"></i>
+          ${c.nome}
+        </div>
+        <div class="carrinho-item-acoes">
+          <span class="carrinho-item-preco">${c.preco}</span>
+          <button class="carrinho-remover" onclick="removerDoCarrinho(${c.id})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Calcula total
+    const soma = carrinho.reduce((acc, c) => {
+      const num = parseFloat(c.preco.replace('R$ ', '').replace(',', '.'));
+      return acc + (isNaN(num) ? 0 : num);
+    }, 0);
+    total.innerHTML = `<strong>Total estimado: R$ ${soma.toFixed(2).replace('.', ',')}</strong>`;
+  }
+
+  overlay.classList.add('ativo');
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharCarrinho(e) {
+  if (e === true || e.target === document.getElementById('carrinho-overlay')) {
+    document.getElementById('carrinho-overlay').classList.remove('ativo');
+    document.body.style.overflow = '';
+  }
+}
+
+function removerDoCarrinho(id) {
+  const idx = carrinho.findIndex(c => c.id === id);
+  if (idx !== -1) carrinho.splice(idx, 1);
+  atualizarBotaoCard(id);
+  atualizarBadgeCarrinho();
+  abrirCarrinho(); // atualiza o modal
+}
+
+function limparCarrinho() {
+  carrinho.forEach(c => atualizarBotaoCard(c.id));
+  carrinho = [];
+  atualizarBadgeCarrinho();
+  fecharCarrinho(true);
+}
+
+function enviarPedido() {
+  if (carrinho.length === 0) return;
+
+  const nome   = document.getElementById('campo-nome').value.trim();
+  const linhas = carrinho.map(c => `✅ ${c.nome} — ${c.preco}`).join('%0A');
+  const soma   = carrinho.reduce((acc, c) => {
+    const num = parseFloat(c.preco.replace('R$ ', '').replace(',', '.'));
+    return acc + (isNaN(num) ? 0 : num);
+  }, 0);
+  const total = `R$ ${soma.toFixed(2).replace('.', ',')}`;
+  const whats = carrinho[0].whats;
+
+  const saudacao = nome
+    ? `Olá! Me chamo *${nome}*.%0A%0A`
+    : `Olá!%0A%0A`;
+
+  const msg = `${saudacao}Gostaria de fazer o seguinte pedido:%0A%0A${linhas}%0A%0A💰 Total estimado: ${total}%0A%0AAguardo confirmação!`;
+  window.open(`https://wa.me/${whats}?text=${msg}`, '_blank');
+  fecharCarrinho(true);
+}
+
+/* ─── CARDS ─── */
+function gerarCards(lista) {
+  const grade   = document.getElementById('grade');
+  const contador = document.getElementById('contador');
+  const paginacao = document.getElementById('paginacao');
+
+  listaFiltrada = lista;
+  const total   = lista.length;
+  const totalPag = Math.ceil(total / POR_PAGINA);
+
+  if (paginaAtual > totalPag) paginaAtual = 1;
+
+  const inicio  = (paginaAtual - 1) * POR_PAGINA;
+  const fim     = Math.min(inicio + POR_PAGINA, total);
+  const pagina  = lista.slice(inicio, fim);
+
+  if (total === 0) {
+    grade.innerHTML = `
+      <div class="vazio">
+        <i class="bi bi-search"></i>
+        Nenhum produto encontrado.<br>
+        <small>Tente outra busca ou categoria.</small>
+      </div>`;
+    contador.textContent = '0 produtos encontrados';
+    paginacao.innerHTML = '';
+    return;
+  }
+
+  contador.textContent = `Mostrando ${inicio + 1}–${fim} de ${total} produto${total > 1 ? 's' : ''}`;
+
+  grade.innerHTML = pagina.map((p, i) => `
+    <div class="card-produto" style="animation-delay:${Math.min(i * 0.03, 0.4)}s">
+      <div class="card-img-wrap" onclick="abrirZoom('${p.foto}', '${p.nome}')">
+        ${p.badge ? `<span class="card-badge badge-${p.badge}">${p.badge}</span>` : ''}
+        <img src="${p.foto}" alt="${p.nome}" loading="lazy">
+      </div>
+      <div class="card-corpo">
+        <div class="card-categoria">${p.categoria}</div>
+        <div class="card-nome">${p.nome}</div>
+        <div class="card-desc">${p.desc}</div>
+        <div class="card-rodape">
+          <div class="card-preco">
+            <small>a partir de</small>
+            ${p.preco}
+          </div>
+          <button class="btn-adicionar ${noCarrinho(p.id) ? 'adicionado' : ''}"
+                  data-id="${p.id}"
+                  onclick="toggleCarrinho(${p.id})">
+            ${noCarrinho(p.id)
+              ? `<i class="bi bi-check-lg"></i> Adicionado`
+              : `<i class="bi bi-cart-plus"></i> Adicionar`}
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Paginação
+  if (totalPag <= 1) { paginacao.innerHTML = ''; return; }
+
+  let html = `<div class="pag-wrap">`;
+  html += `<button class="pag-btn" onclick="irPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>
+             <i class="bi bi-chevron-left"></i>
+           </button>`;
+
+  for (let i = 1; i <= totalPag; i++) {
+    if (i === 1 || i === totalPag || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
+      html += `<button class="pag-btn ${i === paginaAtual ? 'ativo' : ''}" onclick="irPagina(${i})">${i}</button>`;
+    } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
+      html += `<span class="pag-reticencias">…</span>`;
+    }
+  }
+
+  html += `<button class="pag-btn" onclick="irPagina(${paginaAtual + 1})" ${paginaAtual === totalPag ? 'disabled' : ''}>
+             <i class="bi bi-chevron-right"></i>
+           </button>`;
+  html += `</div>`;
+  paginacao.innerHTML = html;
+}
+
+function irPagina(n) {
+  const totalPag = Math.ceil(listaFiltrada.length / POR_PAGINA);
+  if (n < 1 || n > totalPag) return;
+  paginaAtual = n;
+  gerarCards(listaFiltrada);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── FILTROS ─── */
+function aplicarFiltros() {
+  let lista = produtos;
+  if (categoriaAtual !== 'todos') lista = lista.filter(p => p.categoria === categoriaAtual);
+  if (buscaAtual) lista = lista.filter(p =>
+    p.nome.toLowerCase().includes(buscaAtual) ||
+    p.desc.toLowerCase().includes(buscaAtual)
+  );
+  paginaAtual = 1;
+  gerarCards(lista);
+}
+
+function filtrar(cat, btn) {
+  categoriaAtual = cat;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  aplicarFiltros();
+}
+
+document.getElementById('busca').addEventListener('input', function() {
+  buscaAtual = this.value.toLowerCase().trim();
+  aplicarFiltros();
+});
+
+/* ─── ZOOM ─── */
+function abrirZoom(src, nome) {
+  document.getElementById('zoomImagem').src = src.replace('w=400', 'w=1200');
+  document.getElementById('zoomLegenda').textContent = nome;
+  document.getElementById('zoomOverlay').classList.add('ativo');
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharZoom(e) {
+  if (e === true || e.target === document.getElementById('zoomOverlay')) {
+    document.getElementById('zoomOverlay').classList.remove('ativo');
+    document.body.style.overflow = '';
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { fecharZoom(true); fecharCarrinho(true); } });
+
+// Inicializa
+gerarCards(produtos);
+atualizarBadgeCarrinho();
+</script>
+
+</body>
+</html>
